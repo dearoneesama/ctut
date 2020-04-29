@@ -199,7 +199,6 @@ static void df_clear(Map *map) {
 static void df_free(Map *map) {
     map->clear(map);
     free(map);
-    map = NULL;
 }
 
 Map *createHashMap(hashcode_func hashcode, key_equal_func k_equal) {
@@ -255,7 +254,6 @@ static MapIterator *mapiter_next(MapIterator *it) {
 
 static void mapiter_free(MapIterator *it) {
     free(it);
-    it = NULL;
 }
 
 MapIterator *createHashMapIterator(Map *map) {
