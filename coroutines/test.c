@@ -22,7 +22,7 @@ struct receive_args {
 static void receive(scheduler *sch, void *args) {
     coroid_t sid = ((struct receive_args *)args)->sender;
     char *recvd;
-    const char * const myname;
+    char *myname;
     coroutine_yield(sch, NULL, (void**)&myname);
     while (coroutine_resume(sch, sid, NULL, (void**)&recvd) >= 0
         && coroutine_status(sch, sid) != CO_STATUS_COMPLETED) {

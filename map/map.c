@@ -267,6 +267,7 @@ MapIterator *createHashMapIterator(Map *map) {
     it->has_next = mapiter_has_next;
     it->next = mapiter_next;
     it->free = mapiter_free;
+    return it;
 }
 
 
