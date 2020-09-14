@@ -6,7 +6,7 @@
 static void send(scheduler *sch, void *args) {
     (void)args;
     for (;;) {
-        char *buff = malloc(256);
+        char *buff = (char *)malloc(256);
         if (fgets(buff, 256, stdin) == NULL || buff[0] == '\n') {
             free(buff);
             break;
@@ -39,6 +39,6 @@ int main(void) {
     // kick out the receive coroutine
     coroutine_resume(s, rc, NULL, NULL);
     // resume line 26
-    coroutine_resume(s, rc, "oneesama", NULL);
+    coroutine_resume(s, rc, (void *)"oneesama", NULL);
     scheduler_close(s);
 }

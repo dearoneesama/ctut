@@ -7,7 +7,7 @@ typedef struct spam {
 } spam;
 
 static spam *cspam(const char *msg) {
-    spam *r = malloc(sizeof(spam));
+    spam *r = (spam *)malloc(sizeof(spam));
     if (!r) return NULL;
     r->msg = msg;
     return r;
@@ -15,19 +15,19 @@ static spam *cspam(const char *msg) {
 
 int main(void) {
     Map *m = createHashMap(NULL, NULL);
-    m->put(m, "dafwtggd", cspam("ssfabb"));
-    m->put(m, "bfdr", cspam("ssfabb"));
-    m->put(m, "fe kwwg s", cspam("777556"));
-    m->put(m, "fa e g dsg", cspam("s538udu28xxx66b"));
-    m->put(m, "fev32525", cspam("s5244"));
-    m->put(m, "rw", cspam("424ttt"));
-    m->put(m, "4242335244", cspam("6666666"));
-    m->put(m, "4fawtwbb n", cspam(" uuxu"));
-    m->put(m, "orhfasd", cspam("fa3455"));
-    m->put(m, "r23iubbxx", cspam("fwrrrt"));
-    free(m->get(m, "fev32525"));
-    m->remove(m, "fev32525");
-    m->put(m, "fev32525", cspam("s5244changed"));
+    m->put(m, (void *)"dafwtggd",   (void *)cspam("ssfabb"));
+    m->put(m, (void *)"bfdr",       (void *)cspam("ssfabb"));
+    m->put(m, (void *)"fe kwwg s",  (void *)cspam("777556"));
+    m->put(m, (void *)"fa e g dsg", (void *)cspam("s538udu28xxx66b"));
+    m->put(m, (void *)"fev32525",   (void *)cspam("s5244"));
+    m->put(m, (void *)"rw",         (void *)cspam("424ttt"));
+    m->put(m, (void *)"4242335244", (void *)cspam("6666666"));
+    m->put(m, (void *)"4fawtwbb n", (void *)cspam(" uuxu"));
+    m->put(m, (void *)"orhfasd",    (void *)cspam("fa3455"));
+    m->put(m, (void *)"r23iubbxx",  (void *)cspam("fwrrrt"));
+    free(m->get(m, (void *)"fev32525"));
+    m->remove(m, (void *)"fev32525");
+    m->put(m, (void *)"fev32525",   (void *)cspam("s5244changed"));
 
     MapIterator *it = createHashMapIterator(m);
     while (it->has_next(it)) {

@@ -32,13 +32,13 @@ struct coroutine {
 };
 
 scheduler *scheduler_open(size_t stsize) {
-    scheduler *sch = malloc(sizeof(scheduler));
+    scheduler *sch = (scheduler *)malloc(sizeof(scheduler));
     if (sch == NULL)
         return NULL;
     sch->stsize = MIN(SCHEDULER_MAX_ST_SIZE, MAX(stsize, SCHEDULER_MIN_ST_SIZE));
     sch->nco = 0;
     sch->cap = SCHEDULER_CO_SIZE;
-    sch->co = calloc(sch->cap, sizeof(coroutine *));
+    sch->co = (coroutine **)calloc(sch->cap, sizeof(coroutine *));
     if (sch->co == NULL) {
         free(sch);
         return NULL;
@@ -90,7 +90,8 @@ coroid_t coroutine_new(scheduler *sch, yieldable f, void *args) {
     coroid_t id = -1;
     if (sch->nco >= sch->cap) {
         // max size reached, double
-        coroutine **newco = realloc(sch->co, sch->cap * 2 * sizeof(coroutine *));
+        coroutine **newco = (coroutine **)
+            realloc(sch->co, sch->cap * 2 * sizeof(coroutine *));
         if (newco == NULL)
             return -1;
         sch->co = newco;
@@ -117,13 +118,13 @@ coroid_t coroutine_new(scheduler *sch, yieldable f, void *args) {
         co = sch->co[id];
     } else {
         // malloc new coroutine
-        co = malloc(sizeof(coroutine));
+        co = (coroutine *)malloc(sizeof(coroutine));
         if (co == NULL)
             return -1;
         if (id == MAIN_CO_ID) {
             co->stack = NULL;
         } else {
-            co->stack = malloc(sch->stsize);
+            co->stack = (char *)malloc(sch->stsize);
             if (co->stack == NULL) {
                 free(co);
                 return -1;

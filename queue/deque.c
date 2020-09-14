@@ -2,7 +2,7 @@
 
 #include "deque.h"
 
-#define NEW(TYPE) malloc(sizeof(TYPE))
+#define NEW(TYPE) (TYPE *)malloc(sizeof(TYPE))
 #define DELETE(VAR) free((VAR))
 
 // returns NULL if allocation fails

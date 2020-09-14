@@ -3,7 +3,7 @@
 #include "deque.h"
 #include "eventqueue.h"
 
-#define NEW(TYPE) malloc(sizeof(TYPE))
+#define NEW(TYPE) (TYPE *)malloc(sizeof(TYPE))
 #define DELETE(VAR) free((VAR))
 
 // entry of the deque
@@ -34,7 +34,7 @@ EventQueue *eventqueue_create() {
 void eventqueue_close(EventQueue *evqueue) {
     // get rid of all the remaining jobs if there is any
     while (!deque_isempty(evqueue->callbackqueue)) {
-        QueuedJob *curr = deque_pop_right(evqueue->callbackqueue);
+        QueuedJob *curr = (QueuedJob *)deque_pop_right(evqueue->callbackqueue);
         DELETE(curr);
     }
     deque_free(evqueue->callbackqueue);
@@ -68,7 +68,7 @@ void eventqueue_runloop(EventQueue *evqueue) {
     for (;;) {
         if (deque_isempty(evqueue->callbackqueue))
             break;
-        QueuedJob *job = deque_pop_right(evqueue->callbackqueue);
+        QueuedJob *job = (QueuedJob *)deque_pop_right(evqueue->callbackqueue);
         if (job == &queued_stop_sig)
             break;
         EventCallback func = job->func;
