@@ -1,3 +1,4 @@
+// a deque implementation
 #pragma once
 
 #include <stdbool.h>
