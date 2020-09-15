@@ -58,6 +58,24 @@ static void *wrap_evqueue_start(void *arg) {
     nanosleep(&ts, NULL);
 }*/
 
+static int close_sock(struct ThreadConnArg *cona) {
+// https://blog.netherlabs.nl/articles/2009/01/18/the-ultimate-so_linger-page-or-why-is-my-tcp-not-reliable
+#ifdef HELP_ME_ITS_NOT_WORKING
+    char buf[16];
+    shutdown(cona->conn_fd, SHUT_WR);
+    for (;;) {
+        ssize_t ret = read(cona->conn_fd, buf, sizeof buf);
+        if (ret < 0) {
+            fprintf(stderr, "tid %d: cannot read response after sending FIN\n", cona->eqp->id);
+            break;
+        }
+        if (ret == 0)
+            break;
+    }
+#endif
+    return close(cona->conn_fd);
+}
+
 // prepare and send daytime response
 static void do_daytime(struct ThreadConnArg *cona) {
     char buf[MAX_BUFF_SIZE];
@@ -80,7 +98,7 @@ static void do_daytime(struct ThreadConnArg *cona) {
         write(cona->conn_fd, body, bodylen) != bodylen)
         fprintf(stderr, "tid %d: cannot write response: %s\n", cona->eqp->id, ERRSTR);
 
-    close(cona->conn_fd);
+    close_sock(cona);
 }
 
 static void do_others(struct ThreadConnArg *cona) {
@@ -90,7 +108,7 @@ static void do_others(struct ThreadConnArg *cona) {
     if (write(cona->conn_fd, header, header_len) != header_len)
         fprintf(stderr, "tid %d: cannot write response: %s\n", cona->eqp->id, ERRSTR);
 
-    close(cona->conn_fd);
+    close_sock(cona);
 }
 
 static void handle_request(EventQueue *evq, void *arg) {
@@ -99,12 +117,23 @@ static void handle_request(EventQueue *evq, void *arg) {
 
     // read first 6 bytes, which is the min number to determine the request is GET and to root
     char headerbuf[6];
-    if (read(cona->conn_fd, headerbuf, 6) > 0 
-        && memcmp((void *)"GET / ", (void *)headerbuf, 6) == 0)
+    ssize_t left = 6;
+    for (;;) {
+        ssize_t ret = read(cona->conn_fd, headerbuf, left);
+        if (ret < 0) {
+            fprintf(stderr, "tid %d: cannot read request\n", cona->eqp->id);
+            goto free_cona;
+        }
+        left -= ret;
+        if (ret == 0 || left == 0)
+            break;
+    }
+    if (memcmp((void *)"GET / ", (void *)headerbuf, 6) == 0)
         do_daytime(cona);
     else
         do_others(cona);
 
+free_cona:
     printf("tid: %d: processed connection from %s\n", cona->eqp->id, inet_ntoa(cona->client.sin_addr));
     free(cona);
 }
