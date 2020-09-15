@@ -7,6 +7,13 @@ extern "C" {
 
 #include <stddef.h>
 
+// if this macro is defined, the callbackqueue for any event queue will be
+// wrapped by a mutex
+
+#ifdef EVQ_USE_THREADSAFE
+    #include <pthread.h>
+#endif
+
 // deque.h
 struct Deque;
 typedef struct Deque Deque;
@@ -21,6 +28,9 @@ typedef enum EventQueueState {
 typedef struct EventQueue {
     EventQueueState state;
     Deque *callbackqueue;
+#ifdef EVQ_USE_THREADSAFE
+    pthread_mutex_t callbackqueue_mtx;
+#endif
 } EventQueue;
 
 // the functions inside the event queue -> run one by one
@@ -51,7 +61,8 @@ int eventqueue_emplace_stop(EventQueue *evqueue);
 // starts the queue and run the functions inside until it is exhausted or stopped
 // blocks this thread. has no effect if the queue is already running
 // (so you can call this to ensure the loop is running after inserting a job)
-void eventqueue_runloop(EventQueue *evqueue);
+// AT MOST one thread shall be running this function
+void eventqueue_this_thread_run(EventQueue *evqueue);
 
 #ifdef __cplusplus
 }

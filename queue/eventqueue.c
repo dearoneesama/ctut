@@ -6,6 +6,14 @@
 #define NEW(TYPE) (TYPE *)malloc(sizeof(TYPE))
 #define DELETE(VAR) free((VAR))
 
+#ifdef EVQ_USE_THREADSAFE
+    #define SHOULD_LOCK(PLOCK) pthread_mutex_lock(PLOCK)
+    #define SHOULD_UNLOCK(PLOCK) pthread_mutex_unlock(PLOCK)
+#else
+    #define SHOULD_LOCK(PLOCK)
+    #define SHOULD_UNLOCK(PLOCK)
+#endif
+
 // entry of the deque
 typedef struct QueuedJob {
     EventCallback func;
@@ -28,6 +36,13 @@ EventQueue *eventqueue_create() {
     }
     evqueue->callbackqueue = callbackqueue;
     evqueue->state = EVQ_STOPPED;
+#ifdef EVQ_USE_THREADSAFE
+    if (pthread_mutex_init(&evqueue->callbackqueue_mtx, NULL) != 0) {
+        deque_free(evqueue->callbackqueue);
+        DELETE(evqueue);
+        return NULL;
+    }
+#endif
     return evqueue;
 }
 
@@ -38,6 +53,9 @@ void eventqueue_close(EventQueue *evqueue) {
         DELETE(curr);
     }
     deque_free(evqueue->callbackqueue);
+#ifdef EVQ_USE_THREADSAFE
+    pthread_mutex_destroy(&evqueue->callbackqueue_mtx);
+#endif
     DELETE(evqueue);
 }
 
@@ -51,24 +69,32 @@ int eventqueue_emplace(EventQueue *evqueue, EventCallback func, void *arg) {
         return 1;
     newjob->func = func;
     newjob->arg = arg;
+    SHOULD_LOCK(&evqueue->callbackqueue_mtx);
     deque_push_left(evqueue->callbackqueue, newjob);
+    SHOULD_UNLOCK(&evqueue->callbackqueue_mtx);
     return 0;
 }
 
 int eventqueue_emplace_stop(EventQueue *evqueue) {
+    SHOULD_LOCK(&evqueue->callbackqueue_mtx);
     deque_push_left(evqueue->callbackqueue, &queued_stop_sig);
+    SHOULD_UNLOCK(&evqueue->callbackqueue_mtx);
     return 0;
 }
 
-void eventqueue_runloop(EventQueue *evqueue) {
+void eventqueue_this_thread_run(EventQueue *evqueue) {
     if (evqueue->state == EVQ_RUNNING)
         return;
     evqueue->state = EVQ_RUNNING;
 
     for (;;) {
-        if (deque_isempty(evqueue->callbackqueue))
+        SHOULD_LOCK(&evqueue->callbackqueue_mtx);
+        if (deque_isempty(evqueue->callbackqueue)) {
+            SHOULD_UNLOCK(&evqueue->callbackqueue_mtx);
             break;
+        }
         QueuedJob *job = (QueuedJob *)deque_pop_right(evqueue->callbackqueue);
+        SHOULD_UNLOCK(&evqueue->callbackqueue_mtx);
         if (job == &queued_stop_sig)
             break;
         EventCallback func = job->func;
