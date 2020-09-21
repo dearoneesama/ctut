@@ -58,32 +58,32 @@ namespace dim {
     struct quantity {
         using unit = Dim;
         const T value;
-        explicit quantity(T x): value{x} {};
+        explicit constexpr quantity(const T x): value{x} {};
     };
 
     // negation of quantity
     template<class Dim, class T>
-    auto operator-(const quantity<Dim, T> &me) {
+    auto constexpr operator-(const quantity<Dim, T> &me) {
         return quantity<Dim, T>{ -me.value };
     }
     // addition of quantities to produce same unit same dimension quantities
     template<class Dim, class T>
-    auto operator+(const quantity<Dim, T> &lhs, const quantity<Dim, T> &rhs) {
+    auto constexpr operator+(const quantity<Dim, T> &lhs, const quantity<Dim, T> &rhs) {
         return quantity<Dim, T>{ lhs.value + rhs.value };
     }
     // subtraction of quantities to produce same unit same dimension quantities
     template<class Dim, class T>
-    auto operator-(const quantity<Dim, T> &lhs, const quantity<Dim, T> &rhs) {
+    auto constexpr operator-(const quantity<Dim, T> &lhs, const quantity<Dim, T> &rhs) {
         return quantity<Dim, T>{ lhs.value - rhs.value };
     }
     // multiplication of quantities
     template<class D1, class D2, class T>
-    auto operator*(const quantity<D1, T> &lhs, const quantity<D2, T> &rhs) {
+    auto constexpr operator*(const quantity<D1, T> &lhs, const quantity<D2, T> &rhs) {
         return quantity<dimMultiply_t<D1, D2>, T>{ lhs.value * rhs.value };
     }
     // division of quantities
     template<class D1, class D2, class T>
-    auto operator/(const quantity<D1, T> &lhs, const quantity<D2, T> &rhs) {
+    auto constexpr operator/(const quantity<D1, T> &lhs, const quantity<D2, T> &rhs) {
         return quantity<dimDivision_t<D1, D2>, T>{ lhs.value / rhs.value };
     }
 }
