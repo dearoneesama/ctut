@@ -36,7 +36,7 @@ namespace oneesama {
         {}
 
         constexpr l2cf(const l2cf &o)
-            : l2cf{o.fn_->fn}
+            : fn_{new fn_wrapper_t{o.fn_->fn}}, clean_up_on_destruct_{o.clean_up_on_destruct_}
         {}
 
         constexpr l2cf(l2cf &&o) noexcept
@@ -92,6 +92,14 @@ namespace oneesama {
 
     template<class Fn, class R, class ...Args>
     class l2cf<auto (Fn::*)(Args...) const -> R> : public l2cf<auto (Fn::*)(Args...) -> R>
+    {};
+
+    template<class Fn, class R, class ...Args>
+    class l2cf<auto (Fn::*)(Args...) noexcept -> R> : public l2cf<auto (Fn::*)(Args...) -> R>
+    {};
+
+    template<class Fn, class R, class ...Args>
+    class l2cf<auto (Fn::*)(Args...) const noexcept -> R> : public l2cf<auto (Fn::*)(Args...) -> R>
     {};
 
     template<class Fn>
